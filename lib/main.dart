@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'detailPage.dart';
 import 'aboutPage.dart';
 import 'contactPage.dart';
+import 'data_anggota.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,20 +18,36 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
 
-  final List data = [
-    {
-      "title": "Jourdy Sahensolar",
-      "image": "lib/img/Jourdy.jpg",
-      "desc": "halo perkenalkan nama saya Jourdy Sahensolar, saya adalah seorang mahasiswa semester 6 di universitas kelabat"
-    },
-    {
-      "title": "William Jo",
-      "image": "lib/img/willi.jpeg",
-      "desc": "halo perkenalkan nama saya William Jo, saya adalah seorang mahasiswa semester 6 di universitas kelabat"
-    },
-  ];
+class _HomePageState extends State<HomePage> {
+  List<Map<String, String>> filteredData = [];
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredData = anggotaList;
+    searchController.addListener(_filter);
+  }
+
+  void _filter() {
+    String query = searchController.text.toLowerCase();
+    setState(() {
+      filteredData = anggotaList.where((item) {
+        return item["nim"]!.toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,83 +57,74 @@ class HomePage extends StatelessWidget {
         centerTitle: true,
         backgroundColor: Colors.blue,
       ),
-
-      body: ListView.builder(
-        itemCount: data.length,
-        itemBuilder: (context, index){
-
-          return Container(
-            padding: EdgeInsets.all(10),
-            child: Row(
-              children: [
-
-                Image.asset(
-                  data[index]["image"],
-                  width: 100,
-                ),
-
-                SizedBox(width: 10),
-
-                Expanded(
-                  child: Text(
-                    data[index]["title"],
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
-
-                ElevatedButton(
-                  child: Text("Detail"),
-                  onPressed: (){
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => DetailPage(
-                          title: data[index]["title"],
-                          image: data[index]["image"],
-                          desc: data[index]["desc"],
-                        ),
-                      ),
-                    );
-                  },
-                )
-
-              ],
+      body: Column(
+        children: [
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: "Cari NIM",
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.search),
+              ),
             ),
-          );
-
-        },
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredData.length,
+              itemBuilder: (context, index) {
+                final item = filteredData[index];
+                return Card(
+                  margin: EdgeInsets.all(8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: AssetImage(item["image"]!),
+                      onBackgroundImageError: (_, __) => Icon(Icons.person),
+                    ),
+                    title: Text(item["nim"]!),
+                    subtitle: Text(item["nama"]!),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DetailPage(nim: item["nim"]!),
+                        ),
+                      );
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-
       bottomNavigationBar: Padding(
         padding: EdgeInsets.all(10),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-
             ElevatedButton(
               child: Text("About"),
-              onPressed: (){
+              onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context)=>AboutPage()),
+                  MaterialPageRoute(builder: (context) => AboutPage()),
                 );
               },
             ),
-
             ElevatedButton(
               child: Text("Contact"),
-              onPressed: (){
+              onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context)=>ContactPage()),
+                  MaterialPageRoute(builder: (context) => ContactPage()),
                 );
               },
             ),
-
           ],
         ),
       ),
-
     );
   }
 }
